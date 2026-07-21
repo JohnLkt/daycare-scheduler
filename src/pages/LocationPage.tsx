@@ -8,41 +8,123 @@ import { useDaycareStore } from '@/store/DaycareStore';
 import type { Location } from '@/db/schema';
 
 export default function LocationsPage() {
-  const {
-    db,
+  const { db, locations, refresh } = useDaycareStore();
 
-    locations,
+  const emptyLocation: Location = { branchName: '', capacity: 10 };
 
-    refresh,
-  } = useDaycareStore();
+  const [newLocation, setNewLocation] = useState<Location>(emptyLocation);
 
-  const [newLocation, setNewLocation] = useState<Location>({ branchName: '', capacity: 10 });
+  const [editingLocationId, setEditingLocationId] = useState<number | null>(null);
 
-  const addLocation = async (e: React.FormEvent) => {
+  const resetForm = () => {
+    setNewLocation(emptyLocation);
+
+    setEditingLocationId(null);
+  };
+
+  const saveLocation = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!db || !newLocation.branchName) {
       return;
     }
 
+    /**
+     * Edit existing location
+     */
+    if (editingLocationId !== null) {
+      await db.put('locations', { ...newLocation, id: editingLocationId });
+
+      resetForm();
+
+      await refresh();
+
+      return;
+    }
+
+    /**
+     * Create new location
+     */
     await db.add('locations', newLocation);
 
-    setNewLocation({ branchName: '', capacity: 10 });
+    resetForm();
+
+    await refresh();
+  };
+
+  const editLocation = (location: Location) => {
+    setEditingLocationId(location.id ?? null);
+
+    setNewLocation({ ...location });
+  };
+
+  const deleteLocation = async (id: number) => {
+    if (!db) {
+      return;
+    }
+
+    /**
+     * Remove location
+     */
+    await db.delete('locations', id);
+
+    /**
+     * Cleanup child assignments
+     */
+    const children = await db.getAll('child');
+
+    await Promise.all(
+      children
+        .filter((child) => child.branchIds.includes(id))
+        .map((child) =>
+          db.put('child', {
+            ...child,
+            branchIds: child.branchIds.filter((branchId) => branchId !== id),
+          }),
+        ),
+    );
+
+    /**
+     * Cleanup schedules
+     */
+    const childSchedules = await db.getAll('childSchedules');
+
+    await Promise.all(
+      childSchedules
+        .filter((schedule) => schedule.branchId === id)
+        .map((schedule) => db.delete('childSchedules', schedule.id!)),
+    );
+
+    const staffSchedules = await db.getAll('staffSchedules');
+
+    await Promise.all(
+      staffSchedules
+        .filter((schedule) => schedule.branchId === id)
+        .map((schedule) => db.delete('staffSchedules', schedule.id!)),
+    );
+
+    if (editingLocationId === id) {
+      resetForm();
+    }
 
     await refresh();
   };
 
   return (
-    <div
-      className="
-      grid
-      md:grid-cols-3
-      gap-6
-      "
-    >
-      <LocationForm newLocation={newLocation} onChange={setNewLocation} onSubmit={addLocation} />
+    <div className="grid md:grid-cols-3 gap-6">
+      <LocationForm
+        newLocation={newLocation}
+        onChange={setNewLocation}
+        onSubmit={saveLocation}
+        editing={editingLocationId !== null}
+      />
 
-      <LocationList locations={locations} />
+      <LocationList
+        locations={locations}
+        onEdit={editLocation}
+        onDelete={deleteLocation}
+        editing={editingLocationId !== null}
+      />
     </div>
   );
 }

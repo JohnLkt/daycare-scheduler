@@ -7,6 +7,8 @@ import { ChildrenScheduleCard } from '@/components/calendar/ChildrenScheduleCard
 import { StaffScheduleCard } from '@/components/calendar/StaffScheduleCard';
 
 import { useDaycareStore } from '@/store/DaycareStore';
+import { toast } from 'sonner';
+import type { ChildSchedule } from '@/db/schema';
 
 const formatDateKey = (date: Date): string => {
   const y = date.getFullYear();
@@ -26,7 +28,7 @@ export default function CalendarPage() {
 
     childSchedules,
     staffSchedules,
-
+    voucherTransactions,
     refresh,
   } = useDaycareStore();
 
@@ -52,25 +54,106 @@ export default function CalendarPage() {
 
   const isFull = activeBranch ? currentChildBookings.length >= activeBranch.capacity : false;
 
+  const getVoucherBalance = (childId: number) => {
+    return voucherTransactions
+      .filter((transaction) => transaction.childId === childId)
+      .reduce((balance, transaction) => {
+        if (transaction.type === 'topup') {
+          return balance + transaction.amount;
+        }
+
+        return balance - transaction.amount;
+      }, 0);
+  };
+
   const handleScheduleChild = async () => {
     if (!db || selectedBranchId === null || selectedChildToSchedule === '') {
       return;
     }
 
-    if (isFull) {
-      alert('Branch capacity reached.');
+    const childId = Number(selectedChildToSchedule);
+
+    const child = children.find((c) => c.id === childId);
+
+    if (!child) {
       return;
     }
 
+    if (isFull) {
+      toast.error('Branch capacity reached', {
+        description: 'This branch has reached its maximum child capacity for this date.',
+      });
+
+      return;
+    }
+
+    /**
+     * Check voucher balance
+     */
+    if (child.voucherType === 'voucher') {
+      const balance = getVoucherBalance(childId);
+
+      if (balance <= 0) {
+        toast.error('Insufficient voucher balance', {
+          description: `${child.name} has no remaining vouchers.`,
+        });
+
+        return;
+      }
+    }
+
+    /**
+     * Create schedule
+     */
     await db.add('childSchedules', {
-      childId: Number(selectedChildToSchedule),
+      childId,
 
       branchId: selectedBranchId,
 
       date: selectedDate,
     });
 
+    /**
+     * Consume voucher
+     */
+    if (child.voucherType === 'voucher') {
+      await db.add('voucherTransactions', {
+        childId,
+
+        date: selectedDate,
+
+        type: 'usage',
+
+        amount: 1,
+      });
+    }
+
+    toast.success('Child scheduled successfully');
+
     setSelectedChildToSchedule('');
+
+    await refresh();
+  };
+
+  const handleRemoveChildSchedule = async (schedule: ChildSchedule) => {
+    if (!db) {
+      return;
+    }
+
+    const child = children.find((c) => c.id === schedule.childId);
+
+    await db.delete('childSchedules', schedule.id!);
+
+    if (child?.voucherType === 'voucher') {
+      await db.add('voucherTransactions', {
+        childId: schedule.childId,
+        date: selectedDate,
+        type: 'topup',
+        amount: 1,
+      });
+    }
+
+    toast.success('Child removed from schedule');
 
     await refresh();
   };
@@ -89,6 +172,16 @@ export default function CalendarPage() {
     });
 
     setSelectedStaffToSchedule('');
+
+    await refresh();
+  };
+
+  const handleRemoveStaff = async (scheduleId: number) => {
+    if (!db) {
+      return;
+    }
+
+    await db.delete('staffSchedules', scheduleId);
 
     await refresh();
   };
@@ -185,30 +278,22 @@ export default function CalendarPage() {
         >
           <ChildrenScheduleCard
             currentChildBookings={currentChildBookings}
-
             children={children}
-
             selectedBranchId={selectedBranchId}
-
             selectedChildToSchedule={selectedChildToSchedule}
-
             isFull={isFull}
-
             onSelectChild={setSelectedChildToSchedule}
-
             onScheduleChild={handleScheduleChild}
+            onRemoveChild={handleRemoveChildSchedule}
           />
 
           <StaffScheduleCard
             currentStaffBookings={currentStaffBookings}
-
             staff={staff}
-
             selectedStaffToSchedule={selectedStaffToSchedule}
-
             onSelectStaff={setSelectedStaffToSchedule}
-
             onScheduleStaff={handleScheduleStaff}
+            onRemoveStaff={handleRemoveStaff}
           />
         </div>
       </div>
