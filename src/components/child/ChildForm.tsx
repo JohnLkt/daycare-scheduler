@@ -4,52 +4,57 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { Parent, Location } from '@/types/daycare';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import type { Child, Location } from '@/types/daycare';
 
-interface ParentFormProps {
-  newParent: Parent;
+interface ChildFormProps {
+  newChild: Child;
   locations: Location[];
-  onChange: (parent: Parent) => void;
+  initialVoucherAmount: number;
+  onInitialVoucherChange: (amount: number) => void;
+  onChange: (child: Child) => void;
   onSubmit: (e: React.FormEvent) => void;
 }
 
-export const ParentForm: React.FC<ParentFormProps> = ({ newParent, locations, onChange, onSubmit }) => {
+export const ChildForm: React.FC<ChildFormProps> = ({
+  newChild,
+  locations,
+  initialVoucherAmount,
+  onInitialVoucherChange,
+  onChange,
+  onSubmit,
+}) => {
   const handleLocationToggle = (branchId: number) => {
-    const currentBranchIds = newParent.branchIds || [];
+    const currentBranchIds = newChild.branchIds || [];
     const isSelected = currentBranchIds.includes(branchId);
-    
+
     const updatedBranchIds = isSelected
       ? currentBranchIds.filter((id) => id !== branchId)
       : [...currentBranchIds, branchId];
 
-    onChange({ ...newParent, branchIds: updatedBranchIds });
+    onChange({ ...newChild, branchIds: updatedBranchIds });
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg font-bold">Add New Parent</CardTitle>
+        <CardTitle className="text-lg font-bold">Add New Child</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={onSubmit} className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="parent-name">Parent Name</Label>
-            <Input
-              id="parent-name"
-              required
-              value={newParent.name}
-              onChange={(e) => onChange({ ...newParent, name: e.target.value })}
-            />
-          </div>
-
           <div className="space-y-1.5">
             <Label htmlFor="child-name">Child Name</Label>
             <Input
               id="child-name"
               required
-              value={newParent.childName}
-              onChange={(e) => onChange({ ...newParent, childName: e.target.value })}
+              value={newChild.name}
+              onChange={(e) => onChange({ ...newChild, name: e.target.value })}
             />
           </div>
 
@@ -57,11 +62,13 @@ export const ParentForm: React.FC<ParentFormProps> = ({ newParent, locations, on
             <Label>Bound Locations (Select all that apply)</Label>
             <div className="border rounded-md p-3 space-y-2 max-h-36 overflow-y-auto bg-card">
               {locations.length === 0 ? (
-                <p className="text-xs text-muted-foreground">No branches available. Add a branch first.</p>
+                <p className="text-xs text-muted-foreground">
+                  No branches available. Add a branch first.
+                </p>
               ) : (
                 locations.map((loc) => {
                   const locId = loc.id!;
-                  const isChecked = (newParent.branchIds || []).includes(locId);
+                  const isChecked = (newChild.branchIds || []).includes(locId);
                   return (
                     <div key={locId} className="flex items-center space-x-2">
                       <Checkbox
@@ -85,34 +92,46 @@ export const ParentForm: React.FC<ParentFormProps> = ({ newParent, locations, on
           <div className="space-y-1.5">
             <Label htmlFor="voucher-type">Voucher Type</Label>
             <Select
-              value={newParent.voucherType}
-              onValueChange={(val) => onChange({ ...newParent, voucherType: val as 'daily' | 'voucher' })}
+              value={newChild.voucherType}
+              onValueChange={(val) =>
+                onChange({ ...newChild, voucherType: val as 'daily' | 'voucher' })
+              }
             >
               <SelectTrigger id="voucher-type">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="daily">Daily Pass</SelectItem>
-                <SelectItem value="voucher">Voucher Pack</SelectItem>
+                <SelectItem value="daily">Daily</SelectItem>
+                <SelectItem value="monthly">Monthly</SelectItem>
+                <SelectItem value="voucher">Voucher</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {newParent.voucherType === 'voucher' && (
+          {newChild.voucherType === 'voucher' && (
             <div className="space-y-1.5">
-              <Label htmlFor="voucher-amount">Initial Voucher Balance</Label>
+              <Label htmlFor="initial-voucher">Initial Voucher Purchase</Label>
+
               <Input
-                id="voucher-amount"
+                id="initial-voucher"
                 type="number"
                 min="1"
-                value={newParent.remainingVouchers}
-                onChange={(e) => onChange({ ...newParent, remainingVouchers: Number(e.target.value) })}
+                value={initialVoucherAmount}
+                onChange={(e) => onInitialVoucherChange(Number(e.target.value))}
               />
+
+              <p className="text-xs text-muted-foreground">
+                This will create an initial voucher top-up transaction.
+              </p>
             </div>
           )}
 
-          <Button type="submit" className="w-full" disabled={(newParent.branchIds || []).length === 0}>
-            Create Parent Record
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={(newChild.branchIds || []).length === 0}
+          >
+            Create Child Record
           </Button>
         </form>
       </CardContent>

@@ -1,4 +1,4 @@
-export type ActiveTab = 'calendar' | 'parents' | 'staff' | 'locations';
+export type ActiveTab = 'calendar' | 'child' | 'staff' | 'locations';
 
 export interface CalendarDay {
   date: Date;
@@ -7,10 +7,11 @@ export interface CalendarDay {
 }
 
 export type {
-  Parent,
+  Child,
   Staff,
   Location,
   ChildSchedule,
   StaffSchedule,
   DaycareDB,
+  VoucherTransaction,
 } from '@/db/schema';

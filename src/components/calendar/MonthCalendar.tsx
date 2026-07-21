@@ -3,7 +3,13 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import type { Location, ChildSchedule, StaffSchedule } from '@/db/schema';
 import type { CalendarDay } from '@/types/daycare';
@@ -94,10 +100,10 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({
             {calendarDays.map((dayObj) => {
               const isSelected = dayObj.dateStr === selectedDate;
               const dayKids = childSchedules.filter(
-                (cs) => cs.date === dayObj.dateStr && cs.branchId === Number(selectedBranchId)
+                (cs) => cs.date === dayObj.dateStr && cs.branchId === Number(selectedBranchId),
               );
               const dayStaff = staffSchedules.filter(
-                (ss) => ss.date === dayObj.dateStr && ss.branchId === Number(selectedBranchId)
+                (ss) => ss.date === dayObj.dateStr && ss.branchId === Number(selectedBranchId),
               );
               const dayIsFull = activeBranch ? dayKids.length >= activeBranch.capacity : false;
 
@@ -107,7 +113,7 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({
                   onClick={() => onSelectDate(dayObj.dateStr)}
                   className={`min-h-[85px] p-2 rounded-lg text-left border transition-colors flex flex-col justify-between ${
                     !dayObj.isCurrentMonth
-                      ? 'bg-muted/40 text-muted-foreground border-transparent'
+                      ? 'bg-muted/80 text-muted-foreground border-transparent'
                       : 'bg-card border-border hover:bg-accent'
                   } ${isSelected ? 'border-primary ring-1 ring-primary' : ''}`}
                 >
@@ -122,22 +128,43 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({
                     )}
                   </div>
 
-                  {dayObj.isCurrentMonth && (
-                    <div className="space-y-1 mt-1 text-[11px] w-full">
-                      <div className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground flex justify-between">
-                        <span>Kids:</span>
-                        <span className="font-semibold">
-                          {dayKids.length}
-                          {activeBranch ? `/${activeBranch.capacity}` : ''}
-                        </span>
-                      </div>
+                  {/* {dayObj.isCurrentMonth && ( */}
+                  <div className="space-y-1 mt-1 text-[11px] w-full">
+                    {(() => {
+                      const capacity = activeBranch?.capacity ?? 0;
+                      const count = dayKids.length;
 
-                      <div className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground flex justify-between">
-                        <span>Staff:</span>
-                        <span className="font-semibold">{dayStaff.length}</span>
-                      </div>
+                      let bgClass = 'bg-muted text-muted-foreground';
+
+                      if (count > 0 && capacity > 0) {
+                        if (count >= capacity) {
+                          bgClass = 'bg-red-300';
+                        } else {
+                          const percentage = (count / capacity) * 100;
+
+                          bgClass =
+                            percentage <= 50
+                              ? 'bg-green-300'
+                              : 'bg-gradient-to-r from-green-300 to-red-300';
+                        }
+                      }
+
+                      return (
+                        <div className={`px-1.5 py-0.5 rounded flex justify-between ${bgClass}`}>
+                          <span>Children:</span>
+                          <span className="font-semibold">
+                            {count}
+                            {activeBranch ? `/${capacity}` : ''}
+                          </span>
+                        </div>
+                      );
+                    })()}
+                    <div className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground flex justify-between">
+                      <span>Staff:</span>
+                      <span className="font-semibold">{dayStaff.length}</span>
                     </div>
-                  )}
+                  </div>
+                  {/* )} */}
                 </button>
               );
             })}

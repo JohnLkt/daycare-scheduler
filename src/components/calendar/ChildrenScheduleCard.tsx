@@ -3,12 +3,18 @@ import { Plus } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { Parent, ChildSchedule } from '@/types/daycare';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import type { Child, ChildSchedule } from '@/types/daycare';
 
 interface ChildrenScheduleCardProps {
   currentChildBookings: ChildSchedule[];
-  parents: Parent[];
+  children: Child[];
   selectedBranchId: number | null;
   selectedChildToSchedule: number | '';
   isFull: boolean;
@@ -18,15 +24,15 @@ interface ChildrenScheduleCardProps {
 
 export const ChildrenScheduleCard: React.FC<ChildrenScheduleCardProps> = ({
   currentChildBookings,
-  parents,
+  children,
   selectedBranchId,
   selectedChildToSchedule,
   isFull,
   onSelectChild,
   onScheduleChild,
 }) => {
-  // Filter parents bound to the currently active calendar branch
-  const eligibleParents = parents.filter(
+  // Filter children bound to the currently active calendar branch
+  const eligibleChildren = children.filter(
     (p) => selectedBranchId !== null && (p.branchIds || []).includes(selectedBranchId)
   );
 
@@ -39,23 +45,23 @@ export const ChildrenScheduleCard: React.FC<ChildrenScheduleCardProps> = ({
       <CardContent className="space-y-4">
         <div className="flex gap-2">
           <Select
-            disabled={isFull || eligibleParents.length === 0}
+            disabled={isFull || eligibleChildren.length === 0}
             value={selectedChildToSchedule ? String(selectedChildToSchedule) : ''}
             onValueChange={(val) => onSelectChild(Number(val))}
           >
             <SelectTrigger className="flex-1 h-9 text-sm">
               <SelectValue
                 placeholder={
-                  eligibleParents.length === 0
-                    ? 'No parents assigned to this branch'
-                    : 'Select Child / Parent'
+                  eligibleChildren.length === 0
+                    ? 'No child assigned to this branch'
+                    : 'Select Child'
                 }
               />
             </SelectTrigger>
             <SelectContent>
-              {eligibleParents.map((p) => (
+              {eligibleChildren.map((p) => (
                 <SelectItem key={p.id} value={String(p.id)}>
-                  {p.childName} (Parent: {p.name})
+                  {p.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -72,15 +78,14 @@ export const ChildrenScheduleCard: React.FC<ChildrenScheduleCardProps> = ({
 
         <div className="divide-y divide-border">
           {currentChildBookings.map((cs) => {
-            const parent = parents.find((p) => p.id === cs.parentId);
+            const child = children.find((p) => p.id === cs.childId);
             return (
               <div key={cs.id} className="py-2.5 flex justify-between items-center">
                 <div>
-                  <p className="font-semibold text-sm">{parent?.childName}</p>
-                  <p className="text-xs text-muted-foreground">Parent: {parent?.name}</p>
+                  <p className="font-semibold text-sm">{child?.name}</p>
                 </div>
                 <Badge variant="outline" className="capitalize">
-                  {parent?.voucherType}
+                  {child?.voucherType}
                 </Badge>
               </div>
             );
