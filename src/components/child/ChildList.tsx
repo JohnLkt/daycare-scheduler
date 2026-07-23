@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,20 +12,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-
 import type { Child, Location, VoucherTransaction } from '@/types/daycare';
 
 interface ChildListProps {
   children: Child[];
-
   locations: Location[];
-
   voucherTransactions: VoucherTransaction[];
-
   onEdit: (child: Child) => void;
-
   onDelete: (id: number) => void;
-
   editing?: boolean;
 }
 
@@ -40,11 +32,9 @@ export const ChildList: React.FC<ChildListProps> = ({
   editing = false,
 }) => {
   const [deleteTarget, setDeleteTarget] = useState<Child | null>(null);
-
   const getLocationName = (branchId: number) => {
     return locations.find((l) => l.id === branchId)?.branchName || `Branch #${branchId}`;
   };
-
   const getVoucherBalance = (childId: number) => {
     return voucherTransactions
       .filter((transaction) => transaction.childId === childId)
@@ -61,37 +51,24 @@ export const ChildList: React.FC<ChildListProps> = ({
         <CardHeader>
           <CardTitle className="text-lg font-bold">Child Registry</CardTitle>
         </CardHeader>
-
         <CardContent>
           <div className="divide-y divide-border">
             {children.map((child) => (
-              <div
-                key={child.id}
-                className="
-                py-3
-                flex
-                justify-between
-                items-start
-                gap-4
-                "
-              >
+              <div key={child.id} className="py-3 flex justify-between items-start gap-4">
                 <div className="space-y-2">
                   <p className="font-semibold text-sm">{child.name}</p>
-
                   <div className="flex flex-wrap gap-1">
                     {(child.branchIds || []).map((branchId) => (
                       <Badge key={branchId} variant="secondary" className="text-[10px] px-1.5 py-0">
                         {getLocationName(branchId)}
                       </Badge>
                     ))}
-
                     {(child.branchIds || []).length === 0 && (
                       <span className="text-xs text-muted-foreground italic">
                         No location assigned
                       </span>
                     )}
                   </div>
-
                   <div className="flex gap-2">
                     <Button
                       size="sm"
@@ -101,7 +78,6 @@ export const ChildList: React.FC<ChildListProps> = ({
                     >
                       Edit
                     </Button>
-
                     <Button
                       size="sm"
                       variant="destructive"
@@ -112,12 +88,10 @@ export const ChildList: React.FC<ChildListProps> = ({
                     </Button>
                   </div>
                 </div>
-
                 <div className="text-right flex-shrink-0">
                   <Badge variant="outline" className="capitalize">
                     {child.voucherType}
                   </Badge>
-
                   {child.voucherType === 'voucher' && (
                     <p className="text-xs font-semibold text-primary mt-1">
                       {getVoucherBalance(child.id!)} vouchers left
@@ -126,7 +100,6 @@ export const ChildList: React.FC<ChildListProps> = ({
                 </div>
               </div>
             ))}
-
             {children.length === 0 && (
               <p className="text-sm text-muted-foreground py-4 text-center">
                 No children registered yet.
@@ -135,7 +108,6 @@ export const ChildList: React.FC<ChildListProps> = ({
           </div>
         </CardContent>
       </Card>
-
       <AlertDialog
         open={deleteTarget !== null}
         onOpenChange={(open) => {
@@ -147,22 +119,18 @@ export const ChildList: React.FC<ChildListProps> = ({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete {deleteTarget?.name}?</AlertDialogTitle>
-
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the child record, schedule
               history, and voucher transaction history.
             </AlertDialogDescription>
           </AlertDialogHeader>
-
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-
             <AlertDialogAction
               onClick={() => {
                 if (deleteTarget?.id) {
                   onDelete(deleteTarget.id);
                 }
-
                 setDeleteTarget(null);
               }}
             >

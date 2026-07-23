@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import type { Location, ChildSchedule, StaffSchedule } from '@/db/schema';
+import type { Location, ChildSchedule } from '@/db/schema';
 import type { CalendarDay } from '@/types/daycare';
 
 interface MonthCalendarProps {
@@ -22,7 +22,6 @@ interface MonthCalendarProps {
   locations: Location[];
   activeBranch?: Location;
   childSchedules: ChildSchedule[];
-  staffSchedules: StaffSchedule[];
   onPrevMonth: () => void;
   onNextMonth: () => void;
   onSelectDate: (dateStr: string) => void;
@@ -39,7 +38,6 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({
   locations,
   activeBranch,
   childSchedules,
-  staffSchedules,
   onPrevMonth,
   onNextMonth,
   onSelectDate,
@@ -61,7 +59,6 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
-
           <div className="space-y-1">
             <Label htmlFor="branch-select" className="text-xs text-muted-foreground">
               Select Branch
@@ -84,34 +81,32 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({
           </div>
         </CardContent>
       </Card>
-
       {/* Grid Calendar */}
       <Card>
         <CardContent className="p-4">
-          <div className="grid grid-cols-7 gap-1 text-center font-semibold text-xs text-muted-foreground mb-2">
+          <div
+            className="grid grid-cols-7 gap-1 text-center font-semibold text-xs
+              text-muted-foreground mb-2"
+>
             {WEEKDAYS.map((day) => (
               <div key={day} className="py-1 bg-muted rounded-md">
                 {day}
               </div>
             ))}
           </div>
-
           <div className="grid grid-cols-7 gap-1.5">
             {calendarDays.map((dayObj) => {
               const isSelected = dayObj.dateStr === selectedDate;
               const dayKids = childSchedules.filter(
                 (cs) => cs.date === dayObj.dateStr && cs.branchId === Number(selectedBranchId),
               );
-              const dayStaff = staffSchedules.filter(
-                (ss) => ss.date === dayObj.dateStr && ss.branchId === Number(selectedBranchId),
-              );
               const dayIsFull = activeBranch ? dayKids.length >= activeBranch.capacity : false;
-
               return (
                 <button
                   key={dayObj.dateStr}
                   onClick={() => onSelectDate(dayObj.dateStr)}
-                  className={`min-h-[85px] p-2 rounded-lg text-left border transition-colors flex flex-col justify-between ${
+                  className={`min-h-[85px] p-2 rounded-lg text-left border transition-colors flex
+                  flex-col justify-between ${
                     !dayObj.isCurrentMonth
                       ? 'bg-muted/80 text-muted-foreground border-transparent'
                       : 'bg-card border-border hover:bg-accent'
@@ -127,21 +122,16 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({
                       </Badge>
                     )}
                   </div>
-
-                  {/* {dayObj.isCurrentMonth && ( */}
                   <div className="space-y-1 mt-1 text-[11px] w-full">
                     {(() => {
                       const capacity = activeBranch?.capacity ?? 0;
                       const count = dayKids.length;
-
                       let bgClass = 'bg-muted text-muted-foreground';
-
                       if (count > 0 && capacity > 0) {
                         if (count >= capacity) {
                           bgClass = 'bg-red-300';
                         } else {
                           const percentage = (count / capacity) * 100;
-
                           bgClass =
                             percentage <= 50
                               ? 'bg-green-300'
@@ -159,10 +149,6 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({
                         </div>
                       );
                     })()}
-                    <div className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground flex justify-between">
-                      <span>Staff:</span>
-                      <span className="font-semibold">{dayStaff.length}</span>
-                    </div>
                   </div>
                   {/* )} */}
                 </button>

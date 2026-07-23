@@ -1,9 +1,8 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import type { CalendarDay } from '@/types/daycare';
-import type { ChildSchedule, StaffSchedule, Location } from '@/db/schema';
+import type { ChildSchedule, Location } from '@/db/schema';
 import { ChildrenCounter } from './ChildrenCounter';
-import { StaffCounter } from './StaffCounter';
 
 interface CalendarDayCardProps {
   day: CalendarDay;
@@ -11,7 +10,6 @@ interface CalendarDayCardProps {
   selectedBranchId: number | null;
   activeBranch?: Location;
   childSchedules: ChildSchedule[];
-  staffSchedules: StaffSchedule[];
   onSelectDate: (date: string) => void;
 }
 
@@ -21,47 +19,37 @@ export const CalendarDayCard: React.FC<CalendarDayCardProps> = ({
   selectedBranchId,
   activeBranch,
   childSchedules,
-  staffSchedules,
   onSelectDate,
 }) => {
   const isSelected = day.dateStr === selectedDate;
-
   const dayChildren = childSchedules.filter(
     (cs) => cs.date === day.dateStr && cs.branchId === Number(selectedBranchId),
   );
-
-  const dayStaff = staffSchedules.filter(
-    (ss) => ss.date === day.dateStr && ss.branchId === Number(selectedBranchId),
-  );
-
   const isFull = activeBranch != null && dayChildren.length >= activeBranch.capacity;
 
   return (
     <button
       onClick={() => onSelectDate(day.dateStr)}
-      className={`min-h-[85px] p-2 rounded-lg text-left border transition-colors flex flex-col justify-between ${
-        !day.isCurrentMonth
-          ? 'bg-muted/40 text-muted-foreground border-transparent'
-          : 'bg-card border-border hover:bg-accent'
-      } ${isSelected ? 'border-primary ring-1 ring-primary' : ''}`}
+      className={`min-h-[85px] p-2 rounded-lg text-left border transition-colors flex flex-col
+        justify-between ${
+          !day.isCurrentMonth
+            ? 'bg-muted/40 text-muted-foreground border-transparent'
+            : 'bg-card border-border hover:bg-accent'
+        } ${isSelected ? 'border-primary ring-1 ring-primary' : ''}`}
     >
       <div className="flex justify-between items-center">
         <span className={`text-xs font-bold ${isSelected ? 'text-primary' : ''}`}>
           {day.date.getDate()}
         </span>
-
         {isFull && day.isCurrentMonth && (
           <Badge variant="destructive" className="text-[9px] px-1 py-0 h-4">
             Full
           </Badge>
         )}
       </div>
-
       {day.isCurrentMonth && (
         <div className="space-y-1 mt-1 text-[11px]">
           <ChildrenCounter count={dayChildren.length} capacity={activeBranch?.capacity} />
-
-          <StaffCounter count={dayStaff.length} />
         </div>
       )}
     </button>
