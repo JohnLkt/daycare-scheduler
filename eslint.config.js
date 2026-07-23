@@ -42,6 +42,8 @@ export default defineConfig([
       '@stylistic/jsx-first-prop-new-line': ['error', 'multiline'],
       '@stylistic/jsx-closing-bracket-location': ['error', 'tag-aligned'],
       '@stylistic/jsx-indent-props': ['error', 2],
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      eqeqeq: ['error', 'always', { null: 'ignore' }]
     },
     languageOptions: {
       globals: globals.browser,

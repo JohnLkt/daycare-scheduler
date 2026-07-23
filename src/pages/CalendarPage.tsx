@@ -14,9 +14,8 @@ const formatDateKey = (date: Date): string => {
 };
 
 export default function CalendarPage() {
-  const {
-    db, children, locations, childSchedules, voucherTransactions, refresh,
-  } = useDaycareStore();
+  const { db, children, locations, childSchedules, voucherTransactions, refresh } =
+    useDaycareStore();
 
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(formatDateKey(new Date()));
@@ -41,7 +40,7 @@ export default function CalendarPage() {
   };
 
   // Sat=6, Sun=0
-  const isWeekend = (date: Date) => date.getDay() === 0 || date.getDay() === 6; 
+  const isWeekend = (date: Date) => date.getDay() === 0 || date.getDay() === 6;
 
   const handleScheduleChild = async () => {
     if (!db || selectedBranchId === null || selectedChildToSchedule === '') {
@@ -63,7 +62,7 @@ export default function CalendarPage() {
         return;
       }
     }
-    
+
     // Calculate weekdays within the next 30 calendar days from selected date
     const startDate = new Date(selectedDate);
     const endDate = new Date(startDate);
