@@ -92,7 +92,7 @@ export const ChildList: React.FC<ChildListProps> = ({
                   <Badge variant="outline" className="capitalize">
                     {child.voucherType}
                   </Badge>
-                  {child.voucherType === 'voucher' && (
+                  {(child.voucherType === 'voucher' || child.voucherType === 'weekend-voucher') && (
                     <p className="text-xs font-semibold text-primary mt-1">
                       {getVoucherBalance(child.id!)} vouchers left
                     </p>

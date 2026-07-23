@@ -31,16 +31,14 @@ export default function CalendarPage() {
   const getVoucherBalance = (childId: number) => {
     return voucherTransactions
       .filter((transaction) => transaction.childId === childId)
-      .reduce((balance, transaction) => {
-        if (transaction.type === 'topup') {
-          return balance + transaction.amount;
-        }
-        return balance - transaction.amount;
-      }, 0);
+      .reduce(
+        (balance, transaction) =>
+          transaction.type === 'topup'
+            ? balance + transaction.amount
+            : balance - transaction.amount,
+        0,
+      );
   };
-
-  // Sat=6, Sun=0
-  const isWeekend = (date: Date) => date.getDay() === 0 || date.getDay() === 6;
 
   const handleScheduleChild = async () => {
     if (!db || selectedBranchId === null || selectedChildToSchedule === '') {
@@ -52,97 +50,179 @@ export default function CalendarPage() {
       return;
     }
 
-    // Check voucher balance
-    if (child.voucherType === 'voucher') {
+    const selected = new Date(selectedDate);
+    const dayOfWeek = selected.getDay();
+
+    // Sundays are unavailable
+    if (dayOfWeek === 0) {
+      toast.error('Scheduling unavailable', {
+        description: 'Children cannot be scheduled on Sundays.',
+      });
+
+      return;
+    }
+
+    // Weekend vouchers only work on Saturdays
+    if (dayOfWeek === 6 && child.voucherType !== 'weekend-voucher') {
+      toast.error('Invalid schedule', {
+        description: 'Only Weekend Voucher children can be scheduled on Saturdays.',
+      });
+
+      return;
+    }
+
+    // Weekend vouchers cannot be used on weekdays
+    if (dayOfWeek !== 6 && child.voucherType === 'weekend-voucher') {
+      toast.error('Invalid schedule', {
+        description: 'Weekend Voucher children can only be scheduled on Saturdays.',
+      });
+
+      return;
+    }
+
+    // Monthly schedules create a weekday batch
+    if (child.voucherType === 'monthly') {
+      const scheduleDates: string[] = [];
+      const endDate = new Date(selected);
+
+      endDate.setDate(endDate.getDate() + 30);
+
+      const currentDay = new Date(selected);
+
+      while (currentDay < endDate) {
+        const currentDayOfWeek = currentDay.getDay();
+
+        if (currentDayOfWeek !== 0 && currentDayOfWeek !== 6) {
+          const dateKey = formatDateKey(currentDay);
+
+          const existingBookings = childSchedules.filter(
+            (schedule) => schedule.date === dateKey && schedule.branchId === selectedBranchId,
+          );
+
+          const childAlreadyScheduled = existingBookings.some(
+            (schedule) => schedule.childId === childId,
+          );
+
+          if (childAlreadyScheduled) {
+            toast.error('Schedule conflict', {
+              description: `${child.name} is already scheduled on ${dateKey}.`,
+            });
+
+            return;
+          }
+
+          if (!activeBranch || existingBookings.length >= activeBranch.capacity) {
+            toast.error('Branch capacity reached', {
+              description: `The branch is full on ${dateKey}.`,
+            });
+
+            return;
+          }
+
+          scheduleDates.push(dateKey);
+        }
+
+        currentDay.setDate(currentDay.getDate() + 1);
+      }
+
+      const scheduleGroupId = crypto.randomUUID();
+
+      for (const date of scheduleDates) {
+        await db.add('childSchedules', {
+          childId,
+          branchId: selectedBranchId,
+          date,
+          scheduleGroupId,
+        });
+      }
+
+      toast.success(`Scheduled ${scheduleDates.length} weekdays`);
+
+      setSelectedChildToSchedule('');
+
+      await refresh();
+
+      return;
+    }
+
+    // Check voucher availability
+    if (['voucher', 'weekend-voucher'].includes(child.voucherType)) {
       const balance = getVoucherBalance(childId);
+
       if (balance <= 0) {
         toast.error('Insufficient voucher balance', {
           description: `${child.name} has no remaining vouchers.`,
         });
+
         return;
       }
     }
 
-    // Calculate weekdays within the next 30 calendar days from selected date
-    const startDate = new Date(selectedDate);
-    const endDate = new Date(startDate);
+    // Check branch capacity
+    if (isFull) {
+      toast.error('Branch capacity reached', {
+        description: 'This branch has reached its maximum child capacity.',
+      });
 
-    endDate.setDate(endDate.getDate() + 30);
-
-    const scheduleDates: string[] = [];
-
-    const currentDay = new Date(startDate);
-    while (currentDay < endDate) {
-      if (!isWeekend(currentDay)) {
-        const dateKey = formatDateKey(currentDay);
-
-        // Check branch capacity for each day before committing
-        const existingBookings = childSchedules.filter(
-          (s) => s.date === dateKey && s.branchId === selectedBranchId,
-        );
-
-        if (!activeBranch || existingBookings.length >= activeBranch.capacity) {
-          // Cancel everything and show error for first full day
-          toast.error('Cannot schedule more children', {
-            description: `The branch capacity is reached on ${dateKey}`,
-          });
-
-          return;
-        }
-
-        scheduleDates.push(dateKey);
-      }
-
-      currentDay.setDate(currentDay.getDate() + 1);
+      return;
     }
 
-    // Create all schedules at once (optimistic batch) with shared scheduleGroupId
-    const scheduleGroupId = crypto.randomUUID();
+    // Prevent duplicate schedule
+    const alreadyScheduled = currentChildBookings.some((schedule) => schedule.childId === childId);
 
-    for (const dateKey of scheduleDates) {
-      await db.add('childSchedules', {
+    if (alreadyScheduled) {
+      toast.error('Already scheduled', {
+        description: `${child.name} is already scheduled on this date.`,
+      });
+
+      return;
+    }
+
+    await db.add('childSchedules', { childId, branchId: selectedBranchId, date: selectedDate });
+
+    // Consume voucher
+    if (['voucher', 'weekend-voucher'].includes(child.voucherType)) {
+      await db.add('voucherTransactions', {
         childId,
-        branchId: selectedBranchId,
-        date: dateKey,
-        scheduleGroupId,
+        date: selectedDate,
+        type: 'usage',
+        amount: 1,
       });
     }
 
-    toast.success(`Scheduled ${scheduleDates.length} days`);
+    toast.success('Child scheduled successfully.');
+
     setSelectedChildToSchedule('');
+
     await refresh();
   };
 
   const handleRemoveChildSchedule = async (schedule: ChildSchedule) => {
-    if (!db || !schedule.scheduleGroupId) {
+    if (!db) {
       return;
     }
 
-    // Delete all schedules in the same batch (same scheduleGroupId), but NOT adjacent batches
-    // Find all related schedules
-    let deletedCount = 0;
-    const relatedSchedules = childSchedules.filter(
-      (s) => s.scheduleGroupId === schedule.scheduleGroupId,
-    );
+    const schedulesToRemove = schedule.scheduleGroupId
+      ? childSchedules.filter((item) => item.scheduleGroupId === schedule.scheduleGroupId)
+      : [schedule];
 
-    for (const rel of relatedSchedules) {
-      await db.delete('childSchedules', rel.id!);
-      deletedCount++;
+    for (const item of schedulesToRemove) {
+      await db.delete('childSchedules', item.id!);
 
-      // Refund voucher balance for each cancelled voucher child in this batch
-      const child = children.find((c) => c.id === rel.childId);
-      if (child?.voucherType === 'voucher') {
+      const child = children.find((c) => c.id === item.childId);
+
+      // Refund voucher usage
+      if (child && ['voucher', 'weekend-voucher'].includes(child.voucherType)) {
         await db.add('voucherTransactions', {
-          childId: rel.childId,
-          date: selectedDate,
+          childId: item.childId,
+          date: item.date,
           type: 'topup',
           amount: 1,
         });
       }
     }
 
-    toast.success(`Removed ${deletedCount} schedule(s)`);
-    setSelectedChildToSchedule('');
+    toast.success(`Removed ${schedulesToRemove.length} schedule(s)`);
 
     await refresh();
   };
@@ -151,10 +231,12 @@ export default function CalendarPage() {
     const first = new Date(year, month, 1);
     const start = new Date(first);
     const offset = (first.getDay() + 6) % 7;
+
     start.setDate(first.getDate() - offset);
 
     return Array.from({ length: 35 }, (_, index) => {
       const date = new Date(start);
+
       date.setDate(start.getDate() + index);
 
       return {
@@ -187,24 +269,27 @@ export default function CalendarPage() {
         onSelectDate={setSelectedDate}
         onSelectBranch={setSelectedBranchId}
       />
+
       <div className="space-y-4">
         <div className="flex items-center justify-between border-b pb-2">
           <h3 className="font-bold text-lg">
             Details for
             <span className="text-primary ml-1">{selectedDate}</span>
           </h3>
+
           {activeBranch && (
             <Badge variant={isFull ? 'destructive' : 'secondary'}>
-              {currentChildBookings.length}/{activeBranch.capacity}
-              Kids
+              {currentChildBookings.length}/{activeBranch.capacity} Kids
             </Badge>
           )}
         </div>
+
         <div className="grid md:grid-cols-2 gap-6">
           <ChildrenScheduleCard
             currentChildBookings={currentChildBookings}
             children={children}
             selectedBranchId={selectedBranchId}
+            selectedDate={selectedDate}
             selectedChildToSchedule={selectedChildToSchedule}
             isFull={isFull}
             onSelectChild={setSelectedChildToSchedule}

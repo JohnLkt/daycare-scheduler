@@ -16,6 +16,7 @@ interface ChildrenScheduleCardProps {
   currentChildBookings: ChildSchedule[];
   children: Child[];
   selectedBranchId: number | null;
+  selectedDate: string;
   selectedChildToSchedule: number | '';
   isFull: boolean;
   onSelectChild: (id: number) => void;
@@ -27,6 +28,7 @@ export const ChildrenScheduleCard: React.FC<ChildrenScheduleCardProps> = ({
   currentChildBookings,
   children,
   selectedBranchId,
+  selectedDate,
   selectedChildToSchedule,
   isFull,
   onSelectChild,
@@ -38,10 +40,27 @@ export const ChildrenScheduleCard: React.FC<ChildrenScheduleCardProps> = ({
       return false;
     }
 
+    const selected = new Date(selectedDate);
+    const dayOfWeek = selected.getDay();
     const isAssignedToBranch = (child.branchIds || []).includes(selectedBranchId);
     const isAlreadyScheduled = currentChildBookings.some(
       (schedule) => schedule.childId === child.id,
     );
+
+    // Sunday is always unavailable
+    if (dayOfWeek === 0) {
+      return false;
+    }
+
+    // Saturday only allows weekend vouchers
+    if (dayOfWeek === 6 && child.voucherType !== 'weekend-voucher') {
+      return false;
+    }
+
+    // Weekend vouchers only work on Saturday
+    if (dayOfWeek !== 6 && child.voucherType === 'weekend-voucher') {
+      return false;
+    }
 
     return isAssignedToBranch && !isAlreadyScheduled;
   });
