@@ -17,7 +17,6 @@ export default defineConfig([
       tseslint.configs.recommended,
       reactHooks.configs.flat.recommended,
       reactRefresh.configs.vite,
-
       prettierConfig,
     ],
     plugins: {
@@ -33,6 +32,7 @@ export default defineConfig([
           printWidth: 100,
           bracketSpacing: true,
           objectWrap: 'collapse',
+          endOfLine: 'auto',
         },
       ],
     },
