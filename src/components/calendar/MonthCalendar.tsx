@@ -59,7 +59,6 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
-
           <div className="space-y-1">
             <Label htmlFor="branch-select" className="text-xs text-muted-foreground">
               Select Branch
@@ -82,7 +81,6 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({
           </div>
         </CardContent>
       </Card>
-
       {/* Grid Calendar */}
       <Card>
         <CardContent className="p-4">
@@ -93,7 +91,6 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({
               </div>
             ))}
           </div>
-
           <div className="grid grid-cols-7 gap-1.5">
             {calendarDays.map((dayObj) => {
               const isSelected = dayObj.dateStr === selectedDate;
@@ -101,7 +98,6 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({
                 (cs) => cs.date === dayObj.dateStr && cs.branchId === Number(selectedBranchId),
               );
               const dayIsFull = activeBranch ? dayKids.length >= activeBranch.capacity : false;
-
               return (
                 <button
                   key={dayObj.dateStr}
@@ -122,21 +118,16 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({
                       </Badge>
                     )}
                   </div>
-
-                  {/* {dayObj.isCurrentMonth && ( */}
                   <div className="space-y-1 mt-1 text-[11px] w-full">
                     {(() => {
                       const capacity = activeBranch?.capacity ?? 0;
                       const count = dayKids.length;
-
                       let bgClass = 'bg-muted text-muted-foreground';
-
                       if (count > 0 && capacity > 0) {
                         if (count >= capacity) {
                           bgClass = 'bg-red-300';
                         } else {
                           const percentage = (count / capacity) * 100;
-
                           bgClass =
                             percentage <= 50
                               ? 'bg-green-300'

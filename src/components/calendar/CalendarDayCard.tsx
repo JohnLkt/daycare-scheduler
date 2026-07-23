@@ -22,11 +22,9 @@ export const CalendarDayCard: React.FC<CalendarDayCardProps> = ({
   onSelectDate,
 }) => {
   const isSelected = day.dateStr === selectedDate;
-
   const dayChildren = childSchedules.filter(
     (cs) => cs.date === day.dateStr && cs.branchId === Number(selectedBranchId),
   );
-
   const isFull = activeBranch != null && dayChildren.length >= activeBranch.capacity;
 
   return (
@@ -42,14 +40,12 @@ export const CalendarDayCard: React.FC<CalendarDayCardProps> = ({
         <span className={`text-xs font-bold ${isSelected ? 'text-primary' : ''}`}>
           {day.date.getDate()}
         </span>
-
         {isFull && day.isCurrentMonth && (
           <Badge variant="destructive" className="text-[9px] px-1 py-0 h-4">
             Full
           </Badge>
         )}
       </div>
-
       {day.isCurrentMonth && (
         <div className="space-y-1 mt-1 text-[11px]">
           <ChildrenCounter count={dayChildren.length} capacity={activeBranch?.capacity} />

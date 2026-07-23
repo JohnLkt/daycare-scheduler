@@ -50,6 +50,7 @@ export interface DaycareDB extends DBSchema {
 
 const DB_NAME = 'daycare-scheduler-db';
 const DB_VERSION = 5;
+
 export async function initDB(): Promise<IDBPDatabase<DaycareDB>> {
   return openDB<DaycareDB>(DB_NAME, DB_VERSION, {
     upgrade(db) {
@@ -57,7 +58,6 @@ export async function initDB(): Promise<IDBPDatabase<DaycareDB>> {
         const childStore = db.createObjectStore('child', { keyPath: 'id', autoIncrement: true });
         childStore.createIndex('by-name', 'name');
       }
-
       if (!db.objectStoreNames.contains('locations')) {
         const locationStore = db.createObjectStore('locations', {
           keyPath: 'id',
@@ -65,7 +65,6 @@ export async function initDB(): Promise<IDBPDatabase<DaycareDB>> {
         });
         locationStore.createIndex('by-branch', 'branchName', { unique: true });
       }
-
       if (!db.objectStoreNames.contains('childSchedules')) {
         const childSchedStore = db.createObjectStore('childSchedules', {
           keyPath: 'id',
@@ -73,7 +72,6 @@ export async function initDB(): Promise<IDBPDatabase<DaycareDB>> {
         });
         childSchedStore.createIndex('by-date-branch', ['date', 'branchId']);
       }
-
       if (!db.objectStoreNames.contains('voucherTransactions')) {
         const voucherTransactionsStore = db.createObjectStore('voucherTransactions', {
           keyPath: 'id',
