@@ -22,6 +22,7 @@ export interface VoucherTransaction {
   date: string;
   type: 'topup' | 'usage';
   amount: number;
+  price?: number;
 }
 
 export interface ChildSchedule {
