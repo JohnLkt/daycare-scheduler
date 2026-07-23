@@ -41,6 +41,7 @@ export const ChildForm: React.FC<ChildFormProps> = ({
   editing = false,
 }) => {
   const [topUpAmount, setTopUpAmount] = useState(0);
+
   const handleLocationToggle = (branchId: number) => {
     const currentBranchIds = newChild.branchIds ?? [];
     const updatedBranchIds = currentBranchIds.includes(branchId)
@@ -48,6 +49,7 @@ export const ChildForm: React.FC<ChildFormProps> = ({
       : [...currentBranchIds, branchId];
     onChange({ ...newChild, branchIds: updatedBranchIds });
   };
+
   const handleTopUp = () => {
     if (!newChild.id || !onTopUp || topUpAmount <= 0) {
       return;
@@ -55,6 +57,13 @@ export const ChildForm: React.FC<ChildFormProps> = ({
     onTopUp(newChild.id, topUpAmount, paymentDate);
     setTopUpAmount(0);
   };
+
+  const voucherOptions = [
+    { label: 'Daily', value: 'daily' },
+    { label: 'Monthly', value: 'monthly' },
+    { label: 'Voucher', value: 'voucher' },
+    { label: 'Weekend Voucher', value: 'weekend-voucher' },
+  ];
 
   return (
     <Card>
@@ -110,13 +119,15 @@ export const ChildForm: React.FC<ChildFormProps> = ({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="daily">Daily</SelectItem>
-                <SelectItem value="monthly">Monthly</SelectItem>
-                <SelectItem value="voucher">Voucher</SelectItem>
+                {voucherOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
-          {newChild.voucherType === 'voucher' && (
+          {(newChild.voucherType === 'voucher' || newChild.voucherType === 'weekend-voucher') && (
             <div className="space-y-3">
               {editing && (
                 <div className="border rounded-md p-3">

@@ -1,10 +1,12 @@
 import { openDB } from 'idb';
 import type { DBSchema, IDBPDatabase } from 'idb';
 
+export type VoucherSubtype = 'monthly' | 'daily' | 'voucher' | 'weekend-voucher';
+
 export interface Child {
   id?: number;
   name: string;
-  voucherType: 'monthly' | 'daily' | 'voucher';
+  voucherType: VoucherSubtype;
   branchIds: number[];
 }
 
