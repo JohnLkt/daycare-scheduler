@@ -283,20 +283,17 @@ export default function CalendarPage() {
             </Badge>
           )}
         </div>
-
-        <div className="grid md:grid-cols-2 gap-6">
-          <ChildrenScheduleCard
-            currentChildBookings={currentChildBookings}
-            children={children}
-            selectedBranchId={selectedBranchId}
-            selectedDate={selectedDate}
-            selectedChildToSchedule={selectedChildToSchedule}
-            isFull={isFull}
-            onSelectChild={setSelectedChildToSchedule}
-            onScheduleChild={handleScheduleChild}
-            onRemoveChild={handleRemoveChildSchedule}
-          />
-        </div>
+        <ChildrenScheduleCard
+          currentChildBookings={currentChildBookings}
+          children={children}
+          selectedBranchId={selectedBranchId}
+          selectedDate={selectedDate}
+          selectedChildToSchedule={selectedChildToSchedule}
+          isFull={isFull}
+          onSelectChild={setSelectedChildToSchedule}
+          onScheduleChild={handleScheduleChild}
+          onRemoveChild={handleRemoveChildSchedule}
+        />
       </div>
     </div>
   );
