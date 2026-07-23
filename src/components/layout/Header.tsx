@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar as CalendarIcon, Users, UserCheck, MapPin } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, MapPin } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
@@ -11,7 +11,6 @@ export const Header: React.FC = () => {
     { path: '/schedule', label: 'Schedule', icon: CalendarIcon },
     { path: '/locations', label: 'Locations', icon: MapPin },
     { path: '/children', label: 'Children', icon: Users },
-    { path: '/staff', label: 'Staff', icon: UserCheck },
   ];
   return (
     <header className="border-b bg-background px-6 py-4 flex flex-wrap items-center justify-between gap-4">

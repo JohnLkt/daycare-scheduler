@@ -4,7 +4,6 @@ import { Badge } from '@/components/ui/badge';
 
 import { MonthCalendar } from '@/components/calendar/MonthCalendar';
 import { ChildrenScheduleCard } from '@/components/calendar/ChildrenScheduleCard';
-import { StaffScheduleCard } from '@/components/calendar/StaffScheduleCard';
 
 import { useDaycareStore } from '@/store/DaycareStore';
 import { toast } from 'sonner';
@@ -23,11 +22,10 @@ export default function CalendarPage() {
     db,
 
     children,
-    staff,
     locations,
 
     childSchedules,
-    staffSchedules,
+
     voucherTransactions,
     refresh,
   } = useDaycareStore();
@@ -40,15 +38,9 @@ export default function CalendarPage() {
 
   const [selectedChildToSchedule, setSelectedChildToSchedule] = useState<number | ''>('');
 
-  const [selectedStaffToSchedule, setSelectedStaffToSchedule] = useState<number | ''>('');
-
   const activeBranch = locations.find((location) => location.id === selectedBranchId);
 
   const currentChildBookings = childSchedules.filter(
-    (schedule) => schedule.date === selectedDate && schedule.branchId === selectedBranchId,
-  );
-
-  const currentStaffBookings = staffSchedules.filter(
     (schedule) => schedule.date === selectedDate && schedule.branchId === selectedBranchId,
   );
 
@@ -158,34 +150,6 @@ export default function CalendarPage() {
     await refresh();
   };
 
-  const handleScheduleStaff = async () => {
-    if (!db || selectedBranchId === null || selectedStaffToSchedule === '') {
-      return;
-    }
-
-    await db.add('staffSchedules', {
-      staffId: Number(selectedStaffToSchedule),
-
-      branchId: selectedBranchId,
-
-      date: selectedDate,
-    });
-
-    setSelectedStaffToSchedule('');
-
-    await refresh();
-  };
-
-  const handleRemoveStaff = async (scheduleId: number) => {
-    if (!db) {
-      return;
-    }
-
-    await db.delete('staffSchedules', scheduleId);
-
-    await refresh();
-  };
-
   const generateMonthDays = (year: number, month: number) => {
     const first = new Date(year, month, 1);
 
@@ -230,8 +194,6 @@ export default function CalendarPage() {
         activeBranch={activeBranch}
 
         childSchedules={childSchedules}
-
-        staffSchedules={staffSchedules}
 
         onPrevMonth={() =>
           setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))
@@ -285,15 +247,6 @@ export default function CalendarPage() {
             onSelectChild={setSelectedChildToSchedule}
             onScheduleChild={handleScheduleChild}
             onRemoveChild={handleRemoveChildSchedule}
-          />
-
-          <StaffScheduleCard
-            currentStaffBookings={currentStaffBookings}
-            staff={staff}
-            selectedStaffToSchedule={selectedStaffToSchedule}
-            onSelectStaff={setSelectedStaffToSchedule}
-            onScheduleStaff={handleScheduleStaff}
-            onRemoveStaff={handleRemoveStaff}
           />
         </div>
       </div>

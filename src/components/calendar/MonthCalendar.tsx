@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import type { Location, ChildSchedule, StaffSchedule } from '@/db/schema';
+import type { Location, ChildSchedule } from '@/db/schema';
 import type { CalendarDay } from '@/types/daycare';
 
 interface MonthCalendarProps {
@@ -22,7 +22,6 @@ interface MonthCalendarProps {
   locations: Location[];
   activeBranch?: Location;
   childSchedules: ChildSchedule[];
-  staffSchedules: StaffSchedule[];
   onPrevMonth: () => void;
   onNextMonth: () => void;
   onSelectDate: (dateStr: string) => void;
@@ -39,7 +38,6 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({
   locations,
   activeBranch,
   childSchedules,
-  staffSchedules,
   onPrevMonth,
   onNextMonth,
   onSelectDate,
@@ -102,9 +100,6 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({
               const dayKids = childSchedules.filter(
                 (cs) => cs.date === dayObj.dateStr && cs.branchId === Number(selectedBranchId),
               );
-              const dayStaff = staffSchedules.filter(
-                (ss) => ss.date === dayObj.dateStr && ss.branchId === Number(selectedBranchId),
-              );
               const dayIsFull = activeBranch ? dayKids.length >= activeBranch.capacity : false;
 
               return (
@@ -159,10 +154,6 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({
                         </div>
                       );
                     })()}
-                    <div className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground flex justify-between">
-                      <span>Staff:</span>
-                      <span className="font-semibold">{dayStaff.length}</span>
-                    </div>
                   </div>
                   {/* )} */}
                 </button>

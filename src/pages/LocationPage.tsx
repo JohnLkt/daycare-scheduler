@@ -95,14 +95,6 @@ export default function LocationsPage() {
         .map((schedule) => db.delete('childSchedules', schedule.id!)),
     );
 
-    const staffSchedules = await db.getAll('staffSchedules');
-
-    await Promise.all(
-      staffSchedules
-        .filter((schedule) => schedule.branchId === id)
-        .map((schedule) => db.delete('staffSchedules', schedule.id!)),
-    );
-
     if (editingLocationId === id) {
       resetForm();
     }

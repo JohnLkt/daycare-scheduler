@@ -4,7 +4,6 @@ import DashboardLayout from '@/layouts/DashboardLayout';
 
 import CalendarPage from '@/pages/CalendarPage';
 import ChildrenPage from '@/pages/ChildPage';
-import StaffPage from '@/pages/StaffPage';
 import LocationPage from '@/pages/LocationPage';
 
 import { Toaster } from '@/components/ui/sonner';
@@ -22,8 +21,6 @@ export default function App() {
             <Route path="locations" element={<LocationPage />} />
 
             <Route path="children" element={<ChildrenPage />} />
-
-            <Route path="staff" element={<StaffPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

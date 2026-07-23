@@ -1,9 +1,8 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import type { CalendarDay } from '@/types/daycare';
-import type { ChildSchedule, StaffSchedule, Location } from '@/db/schema';
+import type { ChildSchedule, Location } from '@/db/schema';
 import { ChildrenCounter } from './ChildrenCounter';
-import { StaffCounter } from './StaffCounter';
 
 interface CalendarDayCardProps {
   day: CalendarDay;
@@ -11,7 +10,6 @@ interface CalendarDayCardProps {
   selectedBranchId: number | null;
   activeBranch?: Location;
   childSchedules: ChildSchedule[];
-  staffSchedules: StaffSchedule[];
   onSelectDate: (date: string) => void;
 }
 
@@ -21,17 +19,12 @@ export const CalendarDayCard: React.FC<CalendarDayCardProps> = ({
   selectedBranchId,
   activeBranch,
   childSchedules,
-  staffSchedules,
   onSelectDate,
 }) => {
   const isSelected = day.dateStr === selectedDate;
 
   const dayChildren = childSchedules.filter(
     (cs) => cs.date === day.dateStr && cs.branchId === Number(selectedBranchId),
-  );
-
-  const dayStaff = staffSchedules.filter(
-    (ss) => ss.date === day.dateStr && ss.branchId === Number(selectedBranchId),
   );
 
   const isFull = activeBranch != null && dayChildren.length >= activeBranch.capacity;
@@ -60,8 +53,6 @@ export const CalendarDayCard: React.FC<CalendarDayCardProps> = ({
       {day.isCurrentMonth && (
         <div className="space-y-1 mt-1 text-[11px]">
           <ChildrenCounter count={dayChildren.length} capacity={activeBranch?.capacity} />
-
-          <StaffCounter count={dayStaff.length} />
         </div>
       )}
     </button>

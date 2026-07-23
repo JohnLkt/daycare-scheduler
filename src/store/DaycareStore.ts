@@ -3,25 +3,15 @@ import type { IDBPDatabase } from 'idb';
 
 import { initDB } from '@/db/schema';
 
-import type {
-  DaycareDB,
-  Child,
-  Staff,
-  Location,
-  ChildSchedule,
-  StaffSchedule,
-  VoucherTransaction,
-} from '@/db/schema';
+import type { DaycareDB, Child, Location, ChildSchedule, VoucherTransaction } from '@/db/schema';
 
 interface DaycareStore {
   db: IDBPDatabase<DaycareDB> | null;
 
   children: Child[];
-  staff: Staff[];
   locations: Location[];
 
   childSchedules: ChildSchedule[];
-  staffSchedules: StaffSchedule[];
 
   voucherTransactions: VoucherTransaction[];
 
@@ -41,11 +31,9 @@ export const useDaycareStore = create<DaycareStore>((set, get) => ({
   db: null,
 
   children: [],
-  staff: [],
   locations: [],
 
   childSchedules: [],
-  staffSchedules: [],
 
   voucherTransactions: [],
 
@@ -76,31 +64,22 @@ export const useDaycareStore = create<DaycareStore>((set, get) => ({
       return;
     }
 
-    const [children, staff, locations, childSchedules, staffSchedules, voucherTransactions] =
-      await Promise.all([
-        db.getAll('child'),
+    const [children, locations, childSchedules, voucherTransactions] = await Promise.all([
+      db.getAll('child'),
 
-        db.getAll('staff'),
+      db.getAll('locations'),
 
-        db.getAll('locations'),
+      db.getAll('childSchedules'),
 
-        db.getAll('childSchedules'),
-
-        db.getAll('staffSchedules'),
-
-        db.getAll('voucherTransactions'),
-      ]);
+      db.getAll('voucherTransactions'),
+    ]);
 
     set({
       children,
 
-      staff,
-
       locations,
 
       childSchedules,
-
-      staffSchedules,
 
       voucherTransactions,
     });
