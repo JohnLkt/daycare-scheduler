@@ -5,6 +5,7 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 import prettierConfig from 'eslint-config-prettier';
 import prettierPlugin from 'eslint-plugin-prettier';
+import stylistic from '@stylistic/eslint-plugin';
 
 import { defineConfig, globalIgnores } from 'eslint/config';
 
@@ -21,6 +22,7 @@ export default defineConfig([
     ],
     plugins: {
       prettier: prettierPlugin,
+      '@stylistic': stylistic,
     },
     rules: {
       'prettier/prettier': [
@@ -33,8 +35,13 @@ export default defineConfig([
           bracketSpacing: true,
           objectWrap: 'collapse',
           endOfLine: 'auto',
+          plugins: ['prettier-plugin-classnames'],
         },
       ],
+      '@stylistic/jsx-max-props-per-line': ['error', { maximum: 1, when: 'multiline' }],
+      '@stylistic/jsx-first-prop-new-line': ['error', 'multiline'],
+      '@stylistic/jsx-closing-bracket-location': ['error', 'tag-aligned'],
+      '@stylistic/jsx-indent-props': ['error', 2],
     },
     languageOptions: {
       globals: globals.browser,

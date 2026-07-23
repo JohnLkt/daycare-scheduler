@@ -54,16 +54,7 @@ export const ChildList: React.FC<ChildListProps> = ({
         <CardContent>
           <div className="divide-y divide-border">
             {children.map((child) => (
-              <div
-                key={child.id}
-                className="
-                py-3
-                flex
-                justify-between
-                items-start
-                gap-4
-                "
-              >
+              <div key={child.id} className="py-3 flex justify-between items-start gap-4">
                 <div className="space-y-2">
                   <p className="font-semibold text-sm">{child.name}</p>
                   <div className="flex flex-wrap gap-1">

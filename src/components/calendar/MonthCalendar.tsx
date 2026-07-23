@@ -84,7 +84,10 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({
       {/* Grid Calendar */}
       <Card>
         <CardContent className="p-4">
-          <div className="grid grid-cols-7 gap-1 text-center font-semibold text-xs text-muted-foreground mb-2">
+          <div
+            className="grid grid-cols-7 gap-1 text-center font-semibold text-xs
+              text-muted-foreground mb-2"
+>
             {WEEKDAYS.map((day) => (
               <div key={day} className="py-1 bg-muted rounded-md">
                 {day}
@@ -102,7 +105,8 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({
                 <button
                   key={dayObj.dateStr}
                   onClick={() => onSelectDate(dayObj.dateStr)}
-                  className={`min-h-[85px] p-2 rounded-lg text-left border transition-colors flex flex-col justify-between ${
+                  className={`min-h-[85px] p-2 rounded-lg text-left border transition-colors flex
+                  flex-col justify-between ${
                     !dayObj.isCurrentMonth
                       ? 'bg-muted/80 text-muted-foreground border-transparent'
                       : 'bg-card border-border hover:bg-accent'

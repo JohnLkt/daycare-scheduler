@@ -37,16 +37,7 @@ export const LocationList: React.FC<LocationListProps> = ({
         <CardContent>
           <div className="divide-y divide-border">
             {locations.map((loc) => (
-              <div
-                key={loc.id}
-                className="
-                py-3
-                flex
-                justify-between
-                items-center
-                gap-4
-                "
-              >
+              <div key={loc.id} className="py-3 flex justify-between items-center gap-4">
                 <div>
                   <p className="font-semibold text-sm">{loc.branchName}</p>
                   <div className="flex gap-2 mt-2">

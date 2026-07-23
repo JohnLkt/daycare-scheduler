@@ -30,11 +30,12 @@ export const CalendarDayCard: React.FC<CalendarDayCardProps> = ({
   return (
     <button
       onClick={() => onSelectDate(day.dateStr)}
-      className={`min-h-[85px] p-2 rounded-lg text-left border transition-colors flex flex-col justify-between ${
-        !day.isCurrentMonth
-          ? 'bg-muted/40 text-muted-foreground border-transparent'
-          : 'bg-card border-border hover:bg-accent'
-      } ${isSelected ? 'border-primary ring-1 ring-primary' : ''}`}
+      className={`min-h-[85px] p-2 rounded-lg text-left border transition-colors flex flex-col
+        justify-between ${
+          !day.isCurrentMonth
+            ? 'bg-muted/40 text-muted-foreground border-transparent'
+            : 'bg-card border-border hover:bg-accent'
+        } ${isSelected ? 'border-primary ring-1 ring-primary' : ''}`}
     >
       <div className="flex justify-between items-center">
         <span className={`text-xs font-bold ${isSelected ? 'text-primary' : ''}`}>

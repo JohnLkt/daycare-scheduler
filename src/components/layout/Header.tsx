@@ -13,7 +13,9 @@ export const Header: React.FC = () => {
   ];
 
   return (
-    <header className="border-b bg-background px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+    <header
+      className="border-b bg-background px-6 py-4 flex flex-wrap items-center justify-between gap-4"
+    >
       <h1 className="text-xl font-bold flex items-center gap-2">
         <CalendarIcon className="h-6 w-6 text-primary" />
         <span>Daycare Operations Scheduler</span>

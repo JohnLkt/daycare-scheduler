@@ -143,15 +143,7 @@ export default function CalendarPage() {
         onSelectBranch={setSelectedBranchId}
       />
       <div className="space-y-4">
-        <div
-          className="
-          flex
-          items-center
-          justify-between
-          border-b
-          pb-2
-        "
-        >
+        <div className="flex items-center justify-between border-b pb-2">
           <h3 className="font-bold text-lg">
             Details for
             <span className="text-primary ml-1">{selectedDate}</span>
@@ -163,13 +155,7 @@ export default function CalendarPage() {
             </Badge>
           )}
         </div>
-        <div
-          className="
-          grid
-          md:grid-cols-2
-          gap-6
-        "
-        >
+        <div className="grid md:grid-cols-2 gap-6">
           <ChildrenScheduleCard
             currentChildBookings={currentChildBookings}
             children={children}
