@@ -46,7 +46,7 @@ export const ChildForm: React.FC<ChildFormProps> = ({
   ];
 
   return (
-    <Card>
+    <Card className="h-fit">
       <CardHeader>
         <CardTitle className="text-lg font-bold">
           {editing ? 'Edit Child' : 'Add New Child'}
