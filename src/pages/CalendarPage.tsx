@@ -14,8 +14,9 @@ const formatDateKey = (date: Date): string => {
 };
 
 export default function CalendarPage() {
-  const { db, children, locations, childSchedules, voucherTransactions, refresh } =
-    useDaycareStore();
+  const {
+    db, children, locations, childSchedules, voucherTransactions, refresh,
+  } = useDaycareStore();
 
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(formatDateKey(new Date()));
@@ -39,6 +40,9 @@ export default function CalendarPage() {
       }, 0);
   };
 
+  // Sat=6, Sun=0
+  const isWeekend = (date: Date) => date.getDay() === 0 || date.getDay() === 6; 
+
   const handleScheduleChild = async () => {
     if (!db || selectedBranchId === null || selectedChildToSchedule === '') {
       return;
@@ -48,15 +52,8 @@ export default function CalendarPage() {
     if (!child) {
       return;
     }
-    if (isFull) {
-      toast.error('Branch capacity reached', {
-        description: 'This branch has reached its maximum child capacity for this date.',
-      });
-      return;
-    }
-    /**
-     * Check voucher balance
-     */
+
+    // Check voucher balance
     if (child.voucherType === 'voucher') {
       const balance = getVoucherBalance(childId);
       if (balance <= 0) {
@@ -66,41 +63,88 @@ export default function CalendarPage() {
         return;
       }
     }
-    /**
-     * Create schedule
-     */
-    await db.add('childSchedules', { childId, branchId: selectedBranchId, date: selectedDate });
-    /**
-     * Consume voucher
-     */
-    if (child.voucherType === 'voucher') {
-      await db.add('voucherTransactions', {
+    
+    // Calculate weekdays within the next 30 calendar days from selected date
+    const startDate = new Date(selectedDate);
+    const endDate = new Date(startDate);
+
+    endDate.setDate(endDate.getDate() + 30);
+
+    const scheduleDates: string[] = [];
+
+    const currentDay = new Date(startDate);
+    while (currentDay < endDate) {
+      if (!isWeekend(currentDay)) {
+        const dateKey = formatDateKey(currentDay);
+
+        // Check branch capacity for each day before committing
+        const existingBookings = childSchedules.filter(
+          (s) => s.date === dateKey && s.branchId === selectedBranchId,
+        );
+
+        if (!activeBranch || existingBookings.length >= activeBranch.capacity) {
+          // Cancel everything and show error for first full day
+          toast.error('Cannot schedule more children', {
+            description: `The branch capacity is reached on ${dateKey}`,
+          });
+
+          return;
+        }
+
+        scheduleDates.push(dateKey);
+      }
+
+      currentDay.setDate(currentDay.getDate() + 1);
+    }
+
+    // Create all schedules at once (optimistic batch) with shared scheduleGroupId
+    const scheduleGroupId = crypto.randomUUID();
+
+    for (const dateKey of scheduleDates) {
+      await db.add('childSchedules', {
         childId,
-        date: selectedDate,
-        type: 'usage',
-        amount: 1,
+        branchId: selectedBranchId,
+        date: dateKey,
+        scheduleGroupId,
       });
     }
-    toast.success('Child scheduled successfully');
+
+    toast.success(`Scheduled ${scheduleDates.length} days`);
     setSelectedChildToSchedule('');
     await refresh();
   };
 
   const handleRemoveChildSchedule = async (schedule: ChildSchedule) => {
-    if (!db) {
+    if (!db || !schedule.scheduleGroupId) {
       return;
     }
-    const child = children.find((c) => c.id === schedule.childId);
-    await db.delete('childSchedules', schedule.id!);
-    if (child?.voucherType === 'voucher') {
-      await db.add('voucherTransactions', {
-        childId: schedule.childId,
-        date: selectedDate,
-        type: 'topup',
-        amount: 1,
-      });
+
+    // Delete all schedules in the same batch (same scheduleGroupId), but NOT adjacent batches
+    // Find all related schedules
+    let deletedCount = 0;
+    const relatedSchedules = childSchedules.filter(
+      (s) => s.scheduleGroupId === schedule.scheduleGroupId,
+    );
+
+    for (const rel of relatedSchedules) {
+      await db.delete('childSchedules', rel.id!);
+      deletedCount++;
+
+      // Refund voucher balance for each cancelled voucher child in this batch
+      const child = children.find((c) => c.id === rel.childId);
+      if (child?.voucherType === 'voucher') {
+        await db.add('voucherTransactions', {
+          childId: rel.childId,
+          date: selectedDate,
+          type: 'topup',
+          amount: 1,
+        });
+      }
     }
-    toast.success('Child removed from schedule');
+
+    toast.success(`Removed ${deletedCount} schedule(s)`);
+    setSelectedChildToSchedule('');
+
     await refresh();
   };
 
@@ -109,9 +153,11 @@ export default function CalendarPage() {
     const start = new Date(first);
     const offset = (first.getDay() + 6) % 7;
     start.setDate(first.getDate() - offset);
+
     return Array.from({ length: 35 }, (_, index) => {
       const date = new Date(start);
       date.setDate(start.getDate() + index);
+
       return {
         date,
         dateStr: formatDateKey(date),
