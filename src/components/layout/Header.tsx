@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar as CalendarIcon, Users, MapPin } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, MapPin, ListIcon, Ticket } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
@@ -10,6 +10,8 @@ export const Header: React.FC = () => {
     { path: '/schedule', label: 'Schedule', icon: CalendarIcon },
     { path: '/locations', label: 'Locations', icon: MapPin },
     { path: '/children', label: 'Children', icon: Users },
+    { path: '/schedule-reports', label: 'Schedule Reports', icon: ListIcon },
+    { path: '/voucher-reports', label: 'Voucher Reports', icon: Ticket },
   ];
 
   return (

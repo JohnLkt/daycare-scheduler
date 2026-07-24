@@ -19,7 +19,7 @@ export const LocationForm: React.FC<LocationFormProps> = ({
   editing = false,
 }) => {
   return (
-    <Card>
+    <Card className="h-fit">
       <CardHeader>
         <CardTitle className="text-lg font-bold">
           {editing ? 'Edit Daycare Branch' : 'Add Daycare Branch'}

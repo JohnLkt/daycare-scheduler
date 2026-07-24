@@ -1,56 +1,39 @@
-import { useState } from 'react';
 import { ChildForm } from '@/components/child/ChildForm';
 import { ChildList } from '@/components/child/ChildList';
 import { useDaycareStore } from '@/store/DaycareStore';
 import type { Child } from '@/db/schema';
+import { useState } from 'react';
 
-export default function ChildrenPage() {
+export default function ChildPage() {
   const { db, children, locations, voucherTransactions, refresh } = useDaycareStore();
 
   const emptyChild: Child = { name: '', voucherType: 'daily', branchIds: [] };
-  const [newChild, setNewChild] = useState<Child>(emptyChild);
+
+  const [newChild, setNewChild] = useState(emptyChild);
   const [editingChildId, setEditingChildId] = useState<number | null>(null);
-  const [initialVoucherAmount, setInitialVoucherAmount] = useState(0);
-  const [voucherPaymentDate, setVoucherPaymentDate] = useState(
-    new Date().toISOString().split('T')[0],
-  );
 
   const resetForm = () => {
     setNewChild(emptyChild);
-    setInitialVoucherAmount(0);
-    setVoucherPaymentDate(new Date().toISOString().split('T')[0]);
     setEditingChildId(null);
   };
 
   const saveChild = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!db) {
       return;
     }
-    /**
-     * Update existing child
-     */
+
     if (editingChildId !== null) {
       await db.put('child', { ...newChild, id: editingChildId });
+
       resetForm();
       await refresh();
       return;
     }
-    /**
-     * Create child
-     */
-    const childId = await db.add('child', newChild);
-    /**
-     * Initial voucher purchase
-     */
-    if (newChild.voucherType === 'voucher' && initialVoucherAmount > 0) {
-      await db.add('voucherTransactions', {
-        childId,
-        amount: initialVoucherAmount,
-        date: voucherPaymentDate,
-        type: 'topup',
-      });
-    }
+
+    await db.add('child', newChild);
+
     resetForm();
     await refresh();
   };
@@ -58,44 +41,53 @@ export default function ChildrenPage() {
   const editChild = (child: Child) => {
     setEditingChildId(child.id ?? null);
     setNewChild({ ...child });
-    setInitialVoucherAmount(0);
-    setVoucherPaymentDate(new Date().toISOString().split('T')[0]);
+  };
+
+  const topUpVoucher = async (
+    childId: number,
+    amount: number,
+    paymentDate: string,
+    price: number,
+  ) => {
+    if (!db || amount <= 0) {
+      return;
+    }
+
+    await db.add('voucherTransactions', {
+      childId,
+      amount,
+      price,
+      date: paymentDate,
+      type: 'topup',
+    });
+
+    await refresh();
   };
 
   const deleteChild = async (id: number) => {
     if (!db) {
       return;
     }
+
     await db.delete('child', id);
-    /**
-     * Remove schedules
-     */
+
     const schedules = await db.getAll('childSchedules');
+
     await Promise.all(
       schedules
         .filter((schedule) => schedule.childId === id)
         .map((schedule) => db.delete('childSchedules', schedule.id!)),
     );
-    /**
-     * Remove voucher ledger
-     */
+
     const transactions = await db.getAll('voucherTransactions');
+
     await Promise.all(
       transactions
         .filter((transaction) => transaction.childId === id)
         .map((transaction) => db.delete('voucherTransactions', transaction.id!)),
     );
-    if (editingChildId === id) {
-      resetForm();
-    }
-    await refresh();
-  };
 
-  const topUpVoucher = async (childId: number, amount: number, paymentDate: string) => {
-    if (!db || amount <= 0) {
-      return;
-    }
-    await db.add('voucherTransactions', { childId, amount, date: paymentDate, type: 'topup' });
+    resetForm();
     await refresh();
   };
 
@@ -104,31 +96,18 @@ export default function ChildrenPage() {
       <ChildForm
         newChild={newChild}
         locations={locations}
-        initialVoucherAmount={initialVoucherAmount}
-        onInitialVoucherChange={setInitialVoucherAmount}
-        paymentDate={voucherPaymentDate}
-        onPaymentDateChange={setVoucherPaymentDate}
-        voucherBalance={
-          editingChildId
-            ? voucherTransactions
-                .filter((t) => t.childId === editingChildId)
-                .reduce(
-                  (balance, t) => (t.type === 'topup' ? balance + t.amount : balance - t.amount),
-                  0,
-                )
-            : 0
-        }
-        onTopUp={topUpVoucher}
         onChange={setNewChild}
         onSubmit={saveChild}
         editing={editingChildId !== null}
       />
+
       <ChildList
         children={children}
         locations={locations}
         voucherTransactions={voucherTransactions}
         onEdit={editChild}
         onDelete={deleteChild}
+        onTopUp={topUpVoucher}
         editing={editingChildId !== null}
       />
     </div>
