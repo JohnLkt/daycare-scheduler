@@ -20,7 +20,7 @@ export interface VoucherTransaction {
   id?: number;
   childId: number;
   date: string;
-  type: 'topup' | 'usage';
+  type: 'topup' | 'usage' | 'refund';
   amount: number;
   price?: number;
 }

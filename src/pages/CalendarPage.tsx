@@ -31,13 +31,13 @@ export default function CalendarPage() {
   const getVoucherBalance = (childId: number) => {
     return voucherTransactions
       .filter((transaction) => transaction.childId === childId)
-      .reduce(
-        (balance, transaction) =>
-          transaction.type === 'topup'
-            ? balance + transaction.amount
-            : balance - transaction.amount,
-        0,
-      );
+      .reduce((balance, transaction) => {
+        if (transaction.type === 'topup' || transaction.type === 'refund') {
+          return balance + transaction.amount;
+        }
+
+        return balance - transaction.amount;
+      }, 0);
   };
 
   const handleScheduleChild = async () => {
@@ -125,7 +125,16 @@ export default function CalendarPage() {
         currentDay.setDate(currentDay.getDate() + 1);
       }
 
-      const scheduleGroupId = crypto.randomUUID();
+      const scheduleGroupId = [
+        child.name
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/[^a-z0-9-]/g, ''),
+        childId,
+        child.voucherType,
+        Date.now(),
+      ].join('-');
 
       for (const date of scheduleDates) {
         await db.add('childSchedules', {
@@ -216,7 +225,7 @@ export default function CalendarPage() {
         await db.add('voucherTransactions', {
           childId: item.childId,
           date: item.date,
-          type: 'topup',
+          type: 'refund',
           amount: 1,
         });
       }

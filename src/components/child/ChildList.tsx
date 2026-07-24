@@ -50,9 +50,11 @@ export const ChildList: React.FC<ChildListProps> = ({
     return voucherTransactions
       .filter((transaction) => transaction.childId === childId)
       .reduce((balance, transaction) => {
-        return transaction.type === 'topup'
-          ? balance + transaction.amount
-          : balance - transaction.amount;
+        if (transaction.type === 'topup' || transaction.type === 'refund') {
+          return balance + transaction.amount;
+        }
+
+        return balance - transaction.amount;
       }, 0);
   };
 

@@ -3,6 +3,8 @@ import DashboardLayout from '@/layouts/DashboardLayout';
 import CalendarPage from '@/pages/CalendarPage';
 import ChildrenPage from '@/pages/ChildPage';
 import LocationPage from '@/pages/LocationPage';
+import ScheduleReportPage from './pages/ScheduleReportPage';
+import VoucherReportPage from '@/pages/VoucherReportPage';
 import { Toaster } from '@/components/ui/sonner';
 
 export default function App() {
@@ -15,6 +17,8 @@ export default function App() {
             <Route path="schedule" element={<CalendarPage />} />
             <Route path="locations" element={<LocationPage />} />
             <Route path="children" element={<ChildrenPage />} />
+            <Route path="schedule-reports" element={<ScheduleReportPage />} />
+            <Route path="voucher-reports" element={<VoucherReportPage />} />
           </Route>
         </Routes>
       </BrowserRouter>
